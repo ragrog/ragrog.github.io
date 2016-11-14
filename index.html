@@ -1,1 +1,74 @@
-"Hello World" 
+<!DOCTYPE html>
+<html lang="ja">
+	<head>
+		<title>濱ゼミ研究用</title>
+		<meta charset="UTF-8">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/3.4.1/firebase.js"></script>
+		<script src='https://cdn.firebase.com/js/client/2.4.1/firebase.js'></script>
+		<link href="css/style.css" rel="stylesheet">
+		<script>
+			value = 0;
+			baseUri = 'https://test-83442.firebaseio.com/';
+			receiving = true;
+			fire = new Firebase(baseUri);
+			array = ["笑顔", "怒り", "緊張"];
+			$(function(){
+				if (receiving) {
+					$(".sending").hide();
+
+				}
+				fire.on("child_changed", function(snapshot){
+					$(".result").text(array[snapshot.val()]);
+					value = snapshot.val();
+					$('input[value="'+ value +'"]').prop("checked",true);
+				}.bind(this));
+
+				$('input[type="radio"][name="value"]').on('click', function(){
+					value = $(this).val(); 
+					fire.update({"value": value});
+				});
+				$('button').on('click', function(){
+					if(receiving) {
+						// 受信者ならば、送信者が見えるように
+						$(".sending").show();
+						$(".receiving").hide();
+						receiving = false;
+					} else {
+						// 送信者ならば、受信者が見えるように
+						$(".sending").hide();
+						$(".receiving").show();
+						receiving = true;
+					}
+				});
+
+
+			});
+		</script>
+	</head>
+	<body>
+		<div class="sending">
+			<h1>送信者</h1>
+			<ul>
+				<li>
+					<input type="radio" name="value" value="0" checked>
+					<label for="">1</label>
+				</li>
+				<li>
+					<input type="radio" name="value" value="1" >
+					<label for="">2</label>
+				</li>
+				<li>
+					<input type="radio" name="value" value="2" >
+					<label for="">3</label>
+				</li>
+			</ul>
+			<button>受信者</button>
+		</div>
+		<div class="receiving">
+			<h1>受信者へ</h1>
+			<p class="result">笑顔</p>
+			<button>送信者へ</button>
+		</div>
+	</body>
+</html>
