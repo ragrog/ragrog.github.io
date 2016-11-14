@@ -9,25 +9,40 @@
 		<link href="css/style.css" rel="stylesheet">
 		<script>
 			value = 0;
-			baseUri = 'https://test-83442.firebaseio.com/';
-			receiving = true;
-			fire = new Firebase(baseUri);
-			array = ["笑顔", "怒り", "緊張"];
+			receiving = true; // 受信者
+			fire = new Firebase('https://test-83442.firebaseio.com/');     // ファイアーベース
+			array = ["笑顔", "怒り", "緊張"]; // 配列
+
+			// データベースの値によってラジオボタンや表示を変える
+			function changeElement (val) {
+				$(".result").text(array[val]);
+				value = val;
+				$('input[type="radio"][value="'+ val +'"]').prop("checked",true);
+			}
+
 			$(function(){
+				// 最初は受信者を隠す
 				if (receiving) {
 					$(".sending").hide();
-
 				}
-				fire.on("child_changed", function(snapshot){
-					$(".result").text(array[snapshot.val()]);
-					value = snapshot.val();
-					$('input[value="'+ value +'"]').prop("checked",true);
-				}.bind(this));
 
+				// 新しく追加されたとき
+				fire.on("child_added", function(snapshot){
+					changeElement(snapshot.val());
+				});
+
+				// 変更されたとき
+				fire.on("child_changed", function(snapshot){
+					changeElement(snapshot.val());
+				});
+
+				// チェックボックスを押されたとき
 				$('input[type="radio"][name="value"]').on('click', function(){
 					value = $(this).val(); 
 					fire.update({"value": value});
 				});
+
+				// ボタンを押したときの遷移
 				$('button').on('click', function(){
 					if(receiving) {
 						// 受信者ならば、送信者が見えるように
