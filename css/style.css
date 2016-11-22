@@ -8,9 +8,25 @@ input[type="radio"] {
 	width: 200px;
 	height: 80px;
 	padding-left: 25px;
+
 }
 
 button {
 	width: 80px;
 	height: 30px;
+}
+
+.b-blue {
+	background: #bbdefb;
+	color: #0d47a1;
+}
+
+.b-red {
+	background: #ffcdd2;
+	color: #d50000;
+}
+
+.b-yellow {
+	background: #fff8e1;
+	color: #ff6f00;
 }

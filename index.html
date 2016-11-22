@@ -12,12 +12,17 @@
 			receiving = true; // 受信者
 			fire = new Firebase('https://test-83442.firebaseio.com/');     // ファイアーベース
 			array = ["1", "2", "3"]; // 配列
+			c_array = ["b-blue", "b-red", "b-yellow"]
 
 			// データベースの値によってラジオボタンや表示を変える
 			function changeElement (val) {
 				$(".result").text(array[val]);
 				value = val;
 				$('input[type="radio"][value="'+ val +'"]').prop("checked",true);
+				$(".receiving").removeClass(function(index, className) {
+					return (className.match(/\bb-\S+/g) || []).join(' ');
+				});
+				$(".receiving").addClass(c_array[val]);
 			}
 
 			$(function(){
