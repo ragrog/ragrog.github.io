@@ -1,94 +1,164 @@
 <!DOCTYPE html>
-<html lang="ja">
-	<head>
-		<title>濱ゼミ研究用</title>
-		<meta charset="UTF-8">
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-		<script src="https://www.gstatic.com/firebasejs/3.4.1/firebase.js"></script>
-		<script src='https://cdn.firebase.com/js/client/2.4.1/firebase.js'></script>
-		<link href="css/style.css" rel="stylesheet">
-		<script>
-			value = 0;
-			receiving = true; // 受信者
-			fire = new Firebase('https://test-83442.firebaseio.com/');     // ファイアーベース
-			array = ["1", "2", "3"]; // 配列
-			c_array = ["b-blue", "b-red", "b-yellow"]
-
-			// データベースの値によってラジオボタンや表示を変える
-			function changeElement (val) {
-				$(".result").text(array[val]);
-				value = val;
-				$('input[type="radio"][value="'+ val +'"]').prop("checked",true);
-				$(".receiving").removeClass(function(index, className) {
-					return (className.match(/\bb-\S+/g) || []).join(' ');
-				});
-				$(".receiving").addClass(c_array[val]);
-			}
-
-			$(function(){
-				// 最初は受信者を隠す
-				if (receiving) {
-					$(".sending").hide();
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
+	<script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>	
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/4.1.1/firebase.js"></script>	
+	<title>2017 夏合宿</title>
+</head>
+<style>
+</style>
+<body>
+	<div class="container">
+		<div id="container" style="height: 80%;">
+				<canvas id="myChart"></canvas>
+		</div>
+		<div class="row">
+			<a class="waves-effect waves-light btn-large disabled" id="continue">つづけろ</a>
+			<a class="waves-effect waves-light btn-large red accent-4" id="not-continue">やめろ</a>
+		</div>
+		<div class="row">
+			<a class="waves-effect waves-light btn-large" id="initialize">初期化</a>
+		</div>
+	</div>
+	<script>
+		var ctx = document.getElementById("myChart").getContext('2d');
+		var myChart = new Chart(ctx, {
+		type: 'bar',
+		data: {
+			labels: [" "],
+			datasets: [{
+			label: 'つづけろ',
+			backgroundColor:"rgba(0, 191, 165, 0.5)",
+			borderColor:"rgba(0, 191, 165)",
+			borderWidth: 1,
+			data: [0]
+			}]
+		},
+		options: {
+			scales: {
+			yAxes: [
+				{
+				ticks: {
+					beginAtZero: true,
+					min: 0,
+					max: 30
 				}
+				}
+			]
+			}
+      	}
+		});
+		
+		var state = true;
+		var continue_num;
 
-				// 新しく追加されたとき
-				fire.on("child_added", function(snapshot){
-					changeElement(snapshot.val());
-				});
+		// チャートの更新
+		var updateChart = function(){
+			myChart.data.datasets[0].data[0] = continue_num;
+			myChart.update();
+		};
+		// firebaseからの値更新処理
 
-				// 変更されたとき
-				fire.on("child_changed", function(snapshot){
-					changeElement(snapshot.val());
-				});
-
-				// チェックボックスを押されたとき
-				$('input[type="radio"][name="value"]').on('click', function(){
-					value = $(this).val(); 
-					fire.update({"value": value});
-				});
-
-				// ボタンを押したときの遷移
-				$('button').on('click', function(){
-					if(receiving) {
-						// 受信者ならば、送信者が見えるように
-						$(".sending").show();
-						$(".receiving").hide();
-						receiving = false;
-					} else {
-						// 送信者ならば、受信者が見えるように
-						$(".sending").hide();
-						$(".receiving").show();
-						receiving = true;
-					}
-				});
-
-
+		// firebaseへ変更の送信
+		var submit = function(s){
+			if (s){
+				continue_num += 1;
+			} else {
+				continue_num -= 1;
+			}
+			fire_continue.set(continue_num);
+			state = s;
+			// 送信処理
+		};
+		var database;
+		var fire_notif;
+		var fire_continue;
+		var fire_notcontinue;
+		// Initialize Firebase
+		var initializeFirebase = function(){
+			var config = {
+				apiKey: "AIzaSyA61kn8CHaqauFpDzYs4Bcn4Fyf77zUgF8",
+				authDomain: "summer-seminar.firebaseapp.com",
+				databaseURL: "https://summer-seminar.firebaseio.com",
+				projectId: "summer-seminar",
+				storageBucket: "summer-seminar.appspot.com",
+				messagingSenderId: "71691626163"
+			};
+		  	database = firebase.initializeApp(config);
+			  fire_notif = firebase.database().ref('notif');
+			  fire_notcontinue = firebase.database().ref('continue');
+			  fire_continue = firebase.database().ref("continue")
+		}
+		// 初期化信号が受け取った時の処理
+		var initialize = function(){
+			// $("#continue").addClass("disabled");
+			// $("#not-continue").removeClass("disabled");
+			// state = true;
+			// continue_num = 0;
+		}
+		// 初期化信号を送る時の処理
+		var submitInitialize = function(){
+			// // タイムスタンプを取得して、送信用の値を生成
+			// var date = new Date();
+			// var submitData = Math.floor( date.getTime() / 1000 );
+			// fire_notif.set(submitData);
+			// fire_notcontinue.set(0);
+			// fire_continue.set(0);
+		}
+		// 状態の初期化
+		var stateInitialize = function(){
+			state = true;
+			fire_continue.once('value').then(function(snapshot) {
+					continue_num = snapshot.val() + 1;
+					fire_continue.set(continue_num);
 			});
-		</script>
-	</head>
-	<body>
-		<div class="sending">
-			<h1>送信者</h1>
-			<ul>
-				<li>
-					<input type="radio" name="value" value="0" checked>
-					<label for="">1</label>
-				</li>
-				<li>
-					<input type="radio" name="value" value="1" >
-					<label for="">2</label>
-				</li>
-				<li>
-					<input type="radio" name="value" value="2" >
-					<label for="">3</label>
-				</li>
-			</ul>
-			<button>受信者へ</button>
-		</div>
-		<div class="receiving">
-			<h1>受信者</h1>
-			<p class="result"></p>
-			<button>送信者へ</button>
-		</div>
-	</body>
+		}
+		// 続けろを更新したときの処理
+		var updateContinue = function(num) {
+			continue_num = num;
+			updateChart();
+		};
+		$(function(){
+			initializeFirebase();
+			stateInitialize();
+			fire_continue.on('value', function(snapshot) {
+				updateContinue(snapshot.val());
+			});
+			var continue_btn = $("#continue");
+			var not_continue_btn = $("#not-continue");
+			continue_btn.on('click', function(){			
+				not_continue_btn.toggleClass("disabled");
+				continue_btn.toggleClass("disabled");
+				fire_continue.once('value').then(function(snapshot) {
+					continue_num = snapshot.val();
+					submit(true);
+				});
+			});
+			not_continue_btn.on('click', function(){
+				continue_btn.toggleClass("disabled");
+				not_continue_btn.toggleClass("disabled");
+				fire_continue.once('value').then(function(snapshot) {
+					continue_num = snapshot.val();
+					submit(false);
+				});
+			});
+			$(window).on("beforeunload",function(e){
+				if (state){
+					fire_continue.once('value').then(function(snapshot) {
+						continue_num = snapshot.val();
+						submit(false);
+					});
+				}
+			});
+
+		});
+		
+	</script>
+</body>
 </html>
