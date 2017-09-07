@@ -72,7 +72,7 @@
 			} else {
 				continue_num -= 1;
 			}
-			fire_continue.set(continue_num);
+			fire_continue.tra(continue_num);
 			state = s;
 			// 送信処理
 		};
@@ -114,10 +114,11 @@
 		// 状態の初期化
 		var stateInitialize = function(){
 			state = true;
-			fire_continue.once('value').then(function(snapshot) {
-					continue_num = snapshot.val() + 1;
-					fire_continue.set(continue_num);
-			});
+			fire_continue.transaction(function(point) {
+				// If users/ada/rank has never been set, currentRank will be `null`.
+				state = true;
+				return point + 1;
+			  });
 		}
 		// 続けろを更新したときの処理
 		var updateContinue = function(num) {
@@ -135,25 +136,28 @@
 			continue_btn.on('click', function(){			
 				not_continue_btn.toggleClass("disabled");
 				continue_btn.toggleClass("disabled");
-				fire_continue.once('value').then(function(snapshot) {
-					continue_num = snapshot.val();
-					submit(true);
-				});
+				fire_continue.transaction(function(point) {
+					// If users/ada/rank has never been set, currentRank will be `null`.
+					state = true;
+					return point + 1;
+				  });
 			});
 			not_continue_btn.on('click', function(){
 				continue_btn.toggleClass("disabled");
 				not_continue_btn.toggleClass("disabled");
-				fire_continue.once('value').then(function(snapshot) {
-					continue_num = snapshot.val();
-					submit(false);
-				});
+				fire_continue.transaction(function(point) {
+					// If users/ada/rank has never been set, currentRank will be `null`.
+					state = false;
+					return point - 1;
+				  });
 			});
 			$(window).on("beforeunload",function(e){
 				if (state){
-					fire_continue.once('value').then(function(snapshot) {
-						continue_num = snapshot.val();
-						submit(false);
-					});
+					fire_continue.transaction(function(point) {
+					// If users/ada/rank has never been set, currentRank will be `null`.
+					state = false;
+					return point - 1;
+				  });
 				}
 			});
 
